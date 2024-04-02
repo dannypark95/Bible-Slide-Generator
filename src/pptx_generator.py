@@ -12,7 +12,7 @@ def initialize_presentation():
 
 def add_textbox(slide, text, left, top, width, height, position, font_size):
     """
-    Adds a text box to a slide.
+    Adds a text box to a slide with specified text, position, size, alignment, and font size.
     """
     textbox = slide.shapes.add_textbox(left, top, width, height)
     tf = textbox.text_frame
@@ -24,40 +24,27 @@ def add_textbox(slide, text, left, top, width, height, position, font_size):
         run.font.color.rgb = RGBColor(255, 255, 255)
         run.font.size = Pt(font_size)
 
-def add_verse_slide(prs, verse_reference, verse_text):
-    """
-    Adds a single verse as a slide to the presentation.
-    """
-    slide_layout = prs.slide_layouts[6]  # Using a blank slide layout
+def add_verse_slide(prs, book_name_kor, book_name_eng, chapter, verse, text_kor, text_eng):
+    slide_layout = prs.slide_layouts[6]
     slide = prs.slides.add_slide(slide_layout)
-    
-    # Set slide background color to black
     background = slide.background
     fill = background.fill
     fill.solid()
     fill.fore_color.rgb = RGBColor(0, 0, 0)
     
-    # Verse reference in the top right
+    verse_reference = f"{book_name_kor} {book_name_eng} {chapter}:{verse}"
     add_textbox(slide, verse_reference, Inches(8.5), Inches(0), Inches(1.5), Inches(0.75), PP_ALIGN.RIGHT, 18)
-    
-    # Verse text
-    add_textbox(slide, verse_text, Inches(0.5), Inches(2), Inches(9), Inches(5.5), PP_ALIGN.LEFT, 24)
+    add_textbox(slide, text_kor, Inches(0), Inches(0.5), Inches(20), Inches(20), PP_ALIGN.LEFT, 44)
+    add_textbox(slide, text_eng, Inches(0), Inches(5.75), Inches(4), Inches(0.75), PP_ALIGN.LEFT, 18)
 
-def generate_presentation_for_chapter(book, chapter, verses):
-    """
-    Generates a presentation for a given book and chapter with each verse on a separate slide.
-    """
+def generate_presentation_for_chapter(final_df):
     prs = initialize_presentation()
-    for verse_number, verse_text in verses.items():
-        verse_reference = f"{book} {chapter}:{verse_number}"
-        add_verse_slide(prs, verse_reference, verse_text)
+    for _, row in final_df.iterrows():
+        add_verse_slide(prs, row['book_name_kor'], row['book_name_eng'], row['chapter'], row['verse'], row['text_kor'], row['text_eng'])
     
-    file_name = f"{book}_{chapter}.pptx"
+    file_name = f"{row['book_name_eng']}_{row['chapter']}.pptx"
     save_presentation(prs, file_name)
     print(f"Presentation saved as {file_name}")
 
 def save_presentation(prs, file_name):
-    """
-    Saves the presentation to a file.
-    """
     prs.save(file_name)
