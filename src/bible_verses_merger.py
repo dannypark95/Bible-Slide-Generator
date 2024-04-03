@@ -2,10 +2,11 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 import time
+import re
 
 def esvBibleChapter(book, chapter, api_key):
     """
-    Fetches a chapter from the ESV Bible API.
+    Fetches a chapter from the ESV Bible API, handling rate limits with a countdown, and ensures no verses are skipped.
     """
     verse = 1
     verses_data = []
@@ -36,13 +37,21 @@ def esvBibleChapter(book, chapter, api_key):
                 previous_passage_text = passage_text
                 verses_data.append({'book_name_eng': book, 'chapter': chapter, 'verse': verse, 'text_eng': passage_text})
                 pbar.update(1)
-                time.sleep(1.01)
-
+                verse += 1  # Increment verse only on successful fetch
+            elif response.status_code == 429:  # Throttling response
+                detail_message = response.json().get('detail', '')
+                retry_after_match = re.search(r'\b\d+\b', detail_message)
+                if retry_after_match:
+                    retry_after = int(retry_after_match.group()) + 1  # Add one extra second
+                else:
+                    retry_after = 31  # Default to a reasonable retry time if not found
+                for remaining in range(retry_after, 0, -1):
+                    pbar.set_postfix_str(f"Rate limited. Retrying in {remaining} seconds...")
+                    time.sleep(1)
+                pbar.set_postfix_str('')
             else:
                 print("Retrying due to failure...")
-                time.sleep(2)  # Wait for 2 seconds before retrying
-
-            verse += 1
+                time.sleep(2)  # Wait for 2 seconds before retrying without incrementing the verse
 
     return pd.DataFrame(verses_data)
 
