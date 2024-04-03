@@ -36,6 +36,7 @@ def esvBibleChapter(book, chapter, api_key):
                 previous_passage_text = passage_text
                 verses_data.append({'book_name_eng': book, 'chapter': chapter, 'verse': verse, 'text_eng': passage_text})
                 pbar.update(1)
+                time.sleep(0.9)
 
             else:
                 print("Retrying due to failure...")

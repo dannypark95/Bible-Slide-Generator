@@ -42,7 +42,7 @@ def generate_presentation_for_chapter(final_df):
     for _, row in final_df.iterrows():
         add_verse_slide(prs, row['book_name_kor'], row['book_name_eng'], row['chapter'], row['verse'], row['text_kor'], row['text_eng'])
     
-    file_name = f"{row['book_name_eng']}_{row['chapter']}.pptx"
+    file_name = f"{row['book_name_kor']}_{row['book_name_eng']}_{row['chapter']}.pptx"
     save_presentation(prs, file_name)
     print(f"Presentation saved as {file_name}")
 
