@@ -2,6 +2,7 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
+import pandas as pd
 
 def initialize_presentation():
     """
@@ -40,11 +41,21 @@ def add_verse_slide(prs, book_name_kor, book_name_eng, chapter, verse, text_kor,
 def generate_presentation_for_chapter(final_df):
     prs = initialize_presentation()
     for _, row in final_df.iterrows():
-        add_verse_slide(prs, row['book_name_kor'], row['book_name_eng'], row['chapter'], row['verse'], row['text_kor'], row['text_eng'])
-    
-    file_name = f"{row['book_name_kor']}_{row['book_name_eng']}_{row['chapter']}.pptx"
-    save_presentation(prs, file_name)
-    print(f"Presentation saved as {file_name}")
+        # Convert NaN values to an empty string for both Korean and English text.
+        text_kor = str(row['text_kor']) if pd.notna(row['text_kor']) else ""
+        text_eng = str(row['text_eng']) if pd.notna(row['text_eng']) else ""
+
+        # Now, pass these possibly modified strings to add_verse_slide.
+        add_verse_slide(prs, row['book_name_kor'], row['book_name_eng'], row['chapter'], row['verse'], text_kor, text_eng)
+
+    # Ensure that file_name is defined outside the loop to handle cases where final_df might be empty.
+    if not final_df.empty:
+        last_row = final_df.iloc[-1]
+        file_name = f"{last_row['book_name_kor']}_{last_row['book_name_eng']}_{last_row['chapter']}.pptx"
+        save_presentation(prs, file_name)
+        print(f"Presentation saved as {file_name}")
+    else:
+        print("DataFrame is empty. No presentation was generated.")
 
 def save_presentation(prs, file_name):
     prs.save(file_name)
